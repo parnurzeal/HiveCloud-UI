@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head><title>client test for socket</title></head>
+  <body>
+
+    <h1>Test client</h1>
+    
+    <div id='messages'></div>
+    <form id='target'>
+      <input type="text" name="message">
+      <input type="submit" value="Submit">
+    </form>
+   <script src="http://code.jquery.com/jquery-latest.js"></script>
+   <script language="javascript" type="text/javascript" >
+      $(document).ready(function () {
+          var socket = new WebSocket('ws://127.0.0.1:8080');
+          socket.onmessage = function(evt){
+            $('#messages').prepend( "<li>" + evt.data + "</li>"); 
+          };
+          $('#target').submit(function(){
+            socket.send('submit');
+            return false;
+            });
+        });
+    </script>
+  </body>
+</html>
