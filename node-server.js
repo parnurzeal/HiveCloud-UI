@@ -2,7 +2,7 @@
 
 var WebSocketServer = require('websocket').server;
 var http=require('http');
-var fs=
+var fs=require('fs');
 
 var server = http.createServer(function(request, response){
   console.log((new Date()) + ' Received request for ' + request.url);
@@ -22,10 +22,17 @@ wsServer.on('request', function(request){
   console.log((new Date()) + ' Connection accepted.');
   connection.on('message', function(message){
     if(message.type==='utf8'){
-      if(message.utf8Data==='submit')
+      if(message.utf8Data==='submit'){
         console.log('click triggered');
-      console.log('Received Message: ' + message.utf8Data);
-      connection.sendUTF(message.utf8Data);
+        fs.readFile("test.jpg",'base64', function(err, data){
+          json_data = {"image": data};
+          console.log(json_data);
+          connection.send(JSON.stringify(json_data));
+        });
+      }else{
+        console.log('Received Message: ' + message.utf8Data);
+        connection.sendUTF(message.utf8Data);
+      }
     }else if(message.type==='binary'){
       console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
       connection.sendBytes(message.binaryData);
