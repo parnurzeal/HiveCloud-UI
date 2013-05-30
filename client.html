@@ -29,7 +29,7 @@
       <h1> Client </h1>
       <div class="row">
         <div class="span8">
-          <img id='image' />
+          <center><img id='image' class="img-rounded" /></center>
           <div id='messages'></div>
         </div>
         <div class="span4">
@@ -53,13 +53,27 @@
    <script language="javascript" type="text/javascript" >
       $(document).ready(function () {
           var socket = new WebSocket('ws://127.0.0.1:8080');
+          var interface_type = {'interface_type':'hough'};
+          socket.onopen = function(){
+            console.log("Socket has been opened");
+            socket.send(JSON.stringify(interface_type));
+          }
+          
           socket.onmessage = function(evt){
-            if(evt.data.indexOf("image")!=-1){
-              var json_data = JSON.parse(evt.data);
-              $('#messages').prepend("<li>" +json_data.image +"</li>");
-              $('#image').attr("src","data:image/png;base64,"+ json_data.image);
-            }
-          };
+              try{
+                var json_obj = JSON.parse(evt.data);
+                if(typeof json_obj.image!=='undefined'){
+                  $('#image').attr("src","data:image/png;base64,"+json_obj.image);
+                }
+                if(typeof json_obj.filter.name!=='undefined' && typeof json_obj.filter.parameters!=='undefined'){
+                  console.log('parameter name: ' + json_obj.filter.name);
+                  console.log('parameters length: '+ json_obj.filter.parameters.length);
+                  
+                }
+              }catch(e){
+                console.log("ERROR: not json message");
+              }
+            };
           $('#target').submit(function(){
             socket.send('submit');
             return false;

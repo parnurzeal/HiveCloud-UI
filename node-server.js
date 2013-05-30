@@ -21,21 +21,33 @@ wsServer.on('request', function(request){
   var connection = request.accept(null,request.origin);
   console.log((new Date()) + ' Connection accepted.');
   connection.on('message', function(message){
-    if(message.type==='utf8'){
-      if(message.utf8Data==='submit'){
-        console.log('click triggered');
-        fs.readFile("test.jpg",'base64', function(err, data){
-          json_data = {"image": data};
-          console.log(json_data);
-          connection.send(JSON.stringify(json_data));
+    try{
+      var json_obj = JSON.parse(message.utf8Data);
+      console.log('Received json message:' + json_obj);
+      if(json_obj.interface_type==='hough'){
+        fs.readFile("test.png",'base64', function(err, data){
+          json_send_data = {
+                        "image": data,
+                        "filter":{
+                          "name":"hough",
+                          "parameters": [ {"name":"theta","type":"double"}, {"name":"beta","type":"int"}]
+                        } 
+                      };
+          console.log(json_send_data);
+          connection.send(JSON.stringify(json_send_data));
         });
       }else{
-        console.log('Received Message: ' + message.utf8Data);
-        connection.sendUTF(message.utf8Data);
+        console.log('wrong interface_type');
       }
-    }else if(message.type==='binary'){
-      console.log('Received Binary Message of ' + message.binaryData.length + ' bytes');
-      connection.sendBytes(message.binaryData);
+    }catch(e){
+      if(message.type==='utf8'){
+        console.log('Received non-json message: ' + message.utf8Data);
+      }else if(message.type==='binary'){
+        console.log('Received binary message of ' + message.binaryData.length + ' bytes');
+      }
+      else{
+        console.log(e);
+      }
     }
   });
   connection.on('close',function(reasonCode, description){
