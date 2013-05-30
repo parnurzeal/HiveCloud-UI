@@ -1,0 +1,58 @@
+a.icon-twitter-link{
+	color: gray;
+  text-decoration: none;
+}
+
+a.icon-twitter-link:hover{
+	color:#33ccff;
+	text-decoration: none;
+}
+
+a.icon-facebook-link{
+	color: gray;
+	text-decoration: none;
+}
+
+a.icon-facebook-link:hover{
+	color: #3B5998;
+	text-decoration: none;
+}
+
+a.icon-google-plus-link{
+	color: gray;
+	text-decoration: none;
+}
+
+a.icon-google-plus-link:hover{
+	color: red;
+	text-decoration: none;
+}
+
+a.icon-linkedin-link{
+	color: gray;
+	text-decoration: none;
+}
+
+a.icon-linkedin-link:hover{
+	color: #4875B4;
+	text-decoration: none;
+}
+
+a.icon-github-link{
+	color: gray;
+	text-decoration: none;
+}
+
+a.icon-github-link:hover{
+	color: black;
+	text-decoration: none;
+}
+
+a.mytitle{
+	color:black;
+	text-decoration: none;
+}
+a.mytitle:hover{
+	color:black;
+	text-decoration: none;
+}
