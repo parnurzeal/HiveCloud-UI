@@ -35,15 +35,13 @@
         <div class="span4">
           <div class="well">
             <form id='target'>
-              <fieldset>
-                <legend>Parameter</legend>
-                <label>param1</label>
-                <input type="text" name="message" placeholder="Type something...">
-                <label>param2</label>
-                <input type="text" name="message" placeholder="Type something...">
-                <br>
-                <button type="submit" class="btn">Submit</button>
+              <fieldset name="filter_group">
+                <legend>Filter</legend>
+                <select name="filters"></select>
               </fieldset>
+              <fieldset name="param_group">
+              </fieldset>
+              <button type="submit" style="display:none" class="btn">Submit</button>
             </form>
           </div>
         </div>
@@ -53,29 +51,59 @@
    <script language="javascript" type="text/javascript" >
       $(document).ready(function () {
           var socket = new WebSocket('ws://127.0.0.1:8080');
-          var interface_type = {'interface_type':'hough'};
-          socket.onopen = function(){
-            console.log("Socket has been opened");
-            socket.send(JSON.stringify(interface_type));
-          }
-          
+          var selected_filter = {"selected_filter": { "name":"Canny", "parameters":{"theta":10,"beta":6}}};
+          var cur_filter = -1;
           socket.onmessage = function(evt){
               try{
                 var json_obj = JSON.parse(evt.data);
+                console.log(json_obj);
+                if(typeof json_obj.filters!=='undefined'){
+                  var filters = json_obj.filters;
+                  console.log(filters);
+                  $('#target select[name=filters]').append('<option value="-1">-- Select --</option>');
+                  for( i = 0;i<filters.length;i++){
+                    console.log(filters[i]);
+                    $('#target select[name=filters]').append("<option value='"+ i+ "'>" + filters[i].name +"</option>");
+                  }
+                  console.log($('#target select[name=filters] option:selected').text());
+                  $('#target select[name=filters]').change(function (){
+                    var param_group = $('#target fieldset[name=param_group]');
+                    cur_filter = $('#target select[name=filters] option:selected').val();
+                    if(cur_filter==='-1') {param_group.html(''); $('#target button').hide(); return;}
+                    console.log(cur_filter);
+                    var parameters = filters[cur_filter].parameters;
+                    console.log(parameters);
+                    param_group.html('<legend>Parameters</legend>');
+                    for( i = 0;i<parameters.length;i++){
+                      param_group.append('<label>' + parameters[i].name + '</label>');
+                      param_group.append('<input type="text" name="'+ parameters[i].name + '" placeholder="'+ parameters[i].type+'">');
+                      console.log(parameters[i].name);    
+                    }
+                    $('#target button').show();
+                  });
+                  //$('#image').attr("src","data:image/png;base64,"+json_obj.image);
+                }
                 if(typeof json_obj.image!=='undefined'){
                   $('#image').attr("src","data:image/png;base64,"+json_obj.image);
                 }
-                if(typeof json_obj.filter.name!=='undefined' && typeof json_obj.filter.parameters!=='undefined'){
-                  console.log('parameter name: ' + json_obj.filter.name);
-                  console.log('parameters length: '+ json_obj.filter.parameters.length);
-                  
-                }
+                /*socket.onopen = function(){
+                  console.log("Socket has been opened");
+                  socket.send(JSON.stringify(selected_filter));
+                }*/
               }catch(e){
-                console.log("ERROR: not json message");
+                console.log("ERROR: not json message, "+ e);
               }
             };
           $('#target').submit(function(){
-            socket.send('submit');
+            var selected_filter = $('#target select[name=filters] option:selected').text();
+            var data_obj = { "selected_filter": {"name":selected_filter}};
+            data_obj.selected_filter.parameters={};
+            $("#target input[type=text]").each(function(){
+              var input = $(this);
+              data_obj.selected_filter.parameters[input.attr("name")] = input.val(); 
+              });
+            console.log(data_obj);
+            socket.send(JSON.stringify(data_obj));
             return false;
             });
         });
