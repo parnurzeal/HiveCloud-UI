@@ -30,11 +30,11 @@ wsServer.on('request', function(request){
   connection.on('message', function(message){
     try{
       var json_obj = JSON.parse(message.utf8Data);
-      console.log('Received json message:' + json_obj);
+      console.log('Received json message:' + message.utf8Data);
       if(json_obj.selected_filter.name==='Canny'){
         fs.readFile("test.png",'base64', function(err, data){
           json_send_data = { "image": data};
-          console.log(json_send_data);
+          //console.log(json_send_data);
           connection.send(JSON.stringify(json_send_data));
         });
       }else{

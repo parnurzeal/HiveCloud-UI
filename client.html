@@ -29,7 +29,7 @@
       <h1> Client </h1>
       <div class="row">
         <div class="span8">
-          <center><img id='image' class="img-rounded" /></center>
+          <center><img id='image' class="img-rounded" /><br><div id="waiting_text"></div></center>
           <div id='messages'></div>
         </div>
         <div class="span4">
@@ -49,14 +49,27 @@
    </div>
    <script src="http://code.jquery.com/jquery-latest.js"></script>
    <script language="javascript" type="text/javascript" >
+   
+		function get_host() {
+			var url = window.location.href;
+			url = url.replace("http://", "");
+			url = url.split("/");
+			url = url[0].split(":");
+			var ip = url[0];
+			return ip;
+		}
+   
       $(document).ready(function () {
-          var socket = new WebSocket('ws://127.0.0.1:8080');
-          var selected_filter = {"selected_filter": { "name":"Canny", "parameters":{"theta":10,"beta":6}}};
-          var cur_filter = -1;
+          //var socket = new WebSocket("ws://" + get_host() + ":8080");
+          var socket = new WebSocket("ws://27.145.44.35:82");
+          var selected_filter = -1;
+          var selected_filter_name ='Raw';
+          var current_filter = selected_filter;
+          var current_filter_name = selected_filter_name;
           socket.onmessage = function(evt){
               try{
                 var json_obj = JSON.parse(evt.data);
-                console.log(json_obj);
+                //console.log(json_obj);
                 if(typeof json_obj.filters!=='undefined'){
                   var filters = json_obj.filters;
                   console.log(filters);
@@ -68,10 +81,11 @@
                   console.log($('#target select[name=filters] option:selected').text());
                   $('#target select[name=filters]').change(function (){
                     var param_group = $('#target fieldset[name=param_group]');
-                    cur_filter = $('#target select[name=filters] option:selected').val();
-                    if(cur_filter==='-1') {param_group.html(''); $('#target button').hide(); return;}
-                    console.log(cur_filter);
-                    var parameters = filters[cur_filter].parameters;
+                    selected_filter = $('#target select[name=filters] option:selected').val();
+                    selected_filter_name = $('#target select[name=filters] option:selected').text();  
+                    if(selected_filter==='-1') {param_group.html(''); $('#target button').hide(); return;}
+                    console.log(selected_filter +' ' + selected_filter_name);
+                    var parameters = filters[selected_filter].parameters;
                     console.log(parameters);
                     param_group.html('<legend>Parameters</legend>');
                     for( i = 0;i<parameters.length;i++){
@@ -84,23 +98,29 @@
                   //$('#image').attr("src","data:image/png;base64,"+json_obj.image);
                 }
                 if(typeof json_obj.image!=='undefined'){
-                  $('#image').attr("src","data:image/png;base64,"+json_obj.image);
+                  if(json_obj.applying_filter===current_filter_name){
+                    $('#image').attr("src","data:image/png;base64,"+json_obj.image);
+                    $('#waiting_text').html('');
+                  }else {
+                    console.log(json_obj.applying_filter + ' =? '+ current_filter_name); 
+                    $('#waiting_text').html('Waiting for updated image...');
+                  }
                 }
-                /*socket.onopen = function(){
-                  console.log("Socket has been opened");
-                  socket.send(JSON.stringify(selected_filter));
-                }*/
-              }catch(e){
+             }catch(e){
                 console.log("ERROR: not json message, "+ e);
               }
-            };
+          };
+          socket.onclose = function(){
+            console.log('Connection closed');
+          }
+
           $('#target').submit(function(){
-            var selected_filter = $('#target select[name=filters] option:selected').text();
-            var data_obj = { "selected_filter": {"name":selected_filter}};
+            current_filter_name = selected_filter_name;
+            var data_obj = { "selected_filter": {"name":current_filter_name}};
             data_obj.selected_filter.parameters={};
             $("#target input[type=text]").each(function(){
               var input = $(this);
-              data_obj.selected_filter.parameters[input.attr("name")] = input.val(); 
+              data_obj.selected_filter.parameters[input.attr("name")] = parseInt(input.val()); 
               });
             console.log(data_obj);
             socket.send(JSON.stringify(data_obj));
